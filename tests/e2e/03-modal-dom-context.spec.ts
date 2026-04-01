@@ -38,7 +38,7 @@ test.describe("03 · Modal DOM Context", () => {
 
 		// Assertion тоже без ожидания - double flakiness
 		const cards = await page.locator('[data-testid^="task-card-"]').count();
-		expect(cards).toBeGreaterThan(0); // 🎲 нестабильно
+		expect(cards).toBeGreaterThan(0); // нестабильно
 	});
 
 	// STABLE - ждём полного монтирования модала перед взаимодействием
@@ -86,7 +86,7 @@ test.describe("03 · Modal DOM Context", () => {
 	});
 
 	// STABLE - редактирование задачи (edit modal)
-	test("[STABLE] ✅ редактирование задачи через modal", async ({ page }) => {
+	test("[STABLE] редактирование задачи через modal", async ({ page }) => {
 		const task = await createTaskViaAPI(page, {
 			title: "Original Title",
 			status: "BACKLOG",

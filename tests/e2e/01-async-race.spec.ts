@@ -36,7 +36,7 @@ test.describe("01 · Async Race Condition", () => {
 		// isVisible() делает ONE snapshot - не ретраит.
 		const taskCards = page.locator('[data-testid^="task-card-"]');
 		const isVisible = await taskCards.first().isVisible(); // ← snapshot, не web-first!
-		expect(isVisible).toBe(true); // 🎲 нестабильно на медленном CI
+		expect(isVisible).toBe(true); // нестабильно на медленном CI
 	});
 
 	// STABLE TEST - правильный подход

@@ -60,7 +60,7 @@ test.describe("06 · Delete & DOM Consistency (D-category)", () => {
 		// он будет PASS даже если сервер потом вернёт ошибку.
 		// Тест не валидирует реальное состояние системы.
 		const isGone = await page.getByTestId(`task-card-${task.id}`).isVisible();
-		expect(isGone).toBe(false); // 🎲 проходит из-за optimistic, не из-за реального удаления
+		expect(isGone).toBe(false); // проходит из-за optimistic, не из-за реального удаления
 	});
 
 	// STABLE - ждём сетевой запрос, затем проверяем финальный DOM

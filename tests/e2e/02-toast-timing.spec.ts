@@ -66,7 +66,7 @@ test.describe("02 · Toast Assertion Timing", () => {
 	});
 
 	// STABLE - error toast при попытке создать задачу без title
-	test("[STABLE] ✅ показывает inline ошибку при пустом title", async ({
+	test("[STABLE] показывает inline ошибку при пустом title", async ({
 		page,
 	}) => {
 		await openCreateModal(page, "backlog");
