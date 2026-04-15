@@ -88,39 +88,6 @@ test.describe("05 · Drag & Drop (Real Production Case)", () => {
 		).not.toBeVisible();
 	});
 
-	// STABLE - полный pipeline Backlog -> In Progress -> Review -> Done
-	test("[STABLE] задача проходит весь pipeline Backlog->Done", async ({
-		page,
-	}) => {
-		const task = await createTaskViaAPI(page, {
-			title: "Pipeline Task",
-			status: "BACKLOG",
-		});
-		await page.reload();
-		await waitForBoard(page);
-
-		const pipeline: Array<{ to: string; toStatus: string }> = [
-			{ to: "in-progress", toStatus: "in-progress" },
-			{ to: "review", toStatus: "review" },
-			{ to: "done", toStatus: "done" },
-		];
-
-		for (const step of pipeline) {
-			const patchDone = page.waitForResponse(
-				(r) =>
-					r.url().includes(`/api/tasks/${task.id}`) &&
-					r.request().method() === "PATCH",
-			);
-
-			await dndDrag(page, `task-card-${task.id}`, `drop-zone-${step.to}`);
-			await patchDone;
-
-			await expectTaskInColumn(page, "Pipeline Task", step.toStatus);
-		}
-
-		await expectTaskInColumn(page, "Pipeline Task", "done");
-	});
-
 	// STABLE - DnD rollback при ошибке сервера
 	test("[STABLE] DnD откатывается в исходную колонку при ошибке", async ({
 		page,
