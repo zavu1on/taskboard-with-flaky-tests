@@ -1,0 +1,59 @@
+==========================================================
+  ОТЧЁТ: Среда A — Baseline
+  Всего записей: 585
+  Исключён тест: ['[STABLE] задача проходит весь pipeline Backlog->Done']
+==========================================================
+
+--- Failure Rate по категориям ---
+  FLAKY     runs= 155  rate= 39.4%
+  STABLE    runs= 320  rate=  0.0%
+  STRESS    runs= 110  rate=  0.0%
+
+--- Детализация FLAKY-тестов ---
+  Spec                                 Runs  Fails   Rate
+  --------------------------------------------------------
+  02-toast-timing                        15     15 100.0%
+  04-optimistic-rollback                 15     15 100.0%
+  08-stress-rapid-events                 15     15 100.0%
+  07-stress-concurrent                   15     15 100.0%
+  01-async-race                          20      1   5.0%
+  03-modal-dom-context                   15      0   0.0%
+  06-delete-dom-consistency              15      0   0.0%
+  05-drag-and-drop                       15      0   0.0%
+  08-stress-rapid-events                 15      0   0.0%
+  09-stress-cascade-rollback             15      0   0.0%
+
+--- Детализация STABLE-тестов ---
+  Spec                                 Runs  Fails   Rate
+  --------------------------------------------------------
+  01-async-race                          20      0   0.0%
+  02-toast-timing                        15      0   0.0%
+  02-toast-timing                        15      0   0.0%
+  02-toast-timing                        15      0   0.0%
+  02-toast-timing                        15      0   0.0%
+  03-modal-dom-context                   15      0   0.0%
+  03-modal-dom-context                   15      0   0.0%
+  03-modal-dom-context                   15      0   0.0%
+  03-modal-dom-context                   15      0   0.0%
+  04-optimistic-rollback                 15      0   0.0%
+  04-optimistic-rollback                 15      0   0.0%
+  04-optimistic-rollback                 15      0   0.0%
+  05-drag-and-drop                       15      0   0.0%
+  05-drag-and-drop                       15      0   0.0%
+  06-delete-dom-consistency              15      0   0.0%
+  06-delete-dom-consistency              15      0   0.0%
+  06-delete-dom-consistency              15      0   0.0%
+  07-stress-concurrent                   15      0   0.0%
+  08-stress-rapid-events                 15      0   0.0%
+  08-stress-rapid-events                 15      0   0.0%
+  09-stress-cascade-rollback             15      0   0.0%
+
+--- Проверка H1 ---
+H1: FLAKY тесты падают с вероятностью > 0%
+  Результат: ПОДТВЕРЖДЕНА ✓
+
+--- Проверка H2 ---
+H3: STABLE тесты имеют failure rate < 1%
+  Среда A: rate=0.00%  ✓ OK
+
+==========================================================

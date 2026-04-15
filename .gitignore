@@ -8,8 +8,8 @@
 # testing
 /coverage
 /test-results
-/playwright-report
-/stress-results
+# /playwright-report
+# /stress-results
 
 # next.js
 /.next/

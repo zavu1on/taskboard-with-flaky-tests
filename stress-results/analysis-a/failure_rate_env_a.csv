@@ -1,0 +1,39 @@
+spec,pei,category,title,runs,fails,rate_%
+01-async-race,ED,FLAKY,[FLAKY] проверяет карточку сразу после клика Submit,20,1,5.0
+01-async-race,ED,STABLE,[STABLE] ждёт появления конкретной карточки в DOM,20,0,0.0
+01-async-race,ED,STRESS,[STRESS] создаёт 3 задачи подряд без гонок,20,0,0.0
+02-toast-timing,R,FLAKY,[FLAKY] snapshot-проверка toast сразу после клика,15,15,100.0
+02-toast-timing,R,STABLE,[STABLE] error toast при сбое сервера (intercepted),15,0,0.0
+02-toast-timing,R,STABLE,[STABLE] toast появляется и исчезает через 4 секунды,15,0,0.0
+02-toast-timing,R,STABLE,[STABLE] web-first assertion ждёт toast в DOM,15,0,0.0
+02-toast-timing,R,STABLE,[STABLE] показывает inline ошибку при пустом title,15,0,0.0
+03-modal-dom-context,DE,FLAKY,[FLAKY] fill() вызывается до полного монтирования модала,15,0,0.0
+03-modal-dom-context,DE,STABLE,[STABLE] Escape закрывает модал без потери данных на доске,15,0,0.0
+03-modal-dom-context,DE,STABLE,[STABLE] ждёт modal в DOM перед fill(),15,0,0.0
+03-modal-dom-context,DE,STABLE,[STABLE] клик на backdrop закрывает модал,15,0,0.0
+03-modal-dom-context,DE,STABLE,[STABLE] редактирование задачи через modal,15,0,0.0
+04-optimistic-rollback,R+ED,FLAKY,[FLAKY] assertion в момент между optimistic и rollback,15,15,100.0
+04-optimistic-rollback,R+ED,STABLE,[STABLE] ждёт финального DOM-состояния после rollback,15,0,0.0
+04-optimistic-rollback,R+ED,STABLE,[STABLE] удаление задачи с rollback при ошибке сервера,15,0,0.0
+04-optimistic-rollback,R+ED,STABLE,[STABLE] успешный переход статуса через modal,15,0,0.0
+05-drag-and-drop,ED+E,FLAKY,[FLAKY] проверяет колонку сразу после drop,15,0,0.0
+05-drag-and-drop,ED+E,STABLE,[STABLE] DnD откатывается в исходную колонку при ошибке,15,0,0.0
+05-drag-and-drop,ED+E,STABLE,[STABLE] dndDrag + waitForResponse + web-first assertion,15,0,0.0
+06-delete-dom-consistency,D,FLAKY,[FLAKY] проверяет отсутствие карточки до завершения DELETE,15,0,0.0
+06-delete-dom-consistency,D,STABLE,[STABLE] ждёт DELETE response перед проверкой DOM,15,0,0.0
+06-delete-dom-consistency,D,STABLE,[STABLE] удаление в Backlog не затрагивает другие колонки,15,0,0.0
+06-delete-dom-consistency,D,STABLE,"[STABLE] удаляет 3 задачи, счётчик колонки синхронизирован",15,0,0.0
+07-stress-concurrent,ED (stress),FLAKY,[FLAKY] 10 параллельных задач — count() без waitForBoard,15,15,100.0
+07-stress-concurrent,ED (stress),STABLE,[STABLE] 10 параллельных задач — waitForBoard + toHaveCount,15,0,0.0
+07-stress-concurrent,ED (stress),STRESS,[STRESS] 5 задач параллельно меняют статус — финальный DOM,15,0,0.0
+07-stress-concurrent,ED (stress),STRESS,[STRESS] создание и удаление одновременно — DOM consistency,15,0,0.0
+08-stress-rapid-events,R+DE (stress),FLAKY,[FLAKY] двойной клик Submit — риск дублирования задачи,15,15,100.0
+08-stress-rapid-events,R+DE (stress),FLAKY,[FLAKY] open→Escape→open без ожидания анимации,15,0,0.0
+08-stress-rapid-events,R+DE (stress),STABLE,[STABLE] open→Escape→open с ожиданием каждого перехода,15,0,0.0
+08-stress-rapid-events,R+DE (stress),STABLE,[STABLE] submit защищён: modal закрывается до второго клика,15,0,0.0
+08-stress-rapid-events,R+DE (stress),STRESS,[STRESS] 10 задач подряд через UI — максимальная нагрузка,15,0,0.0
+08-stress-rapid-events,R+DE (stress),STRESS,[STRESS] 5 последовательных edit — финальный статус корректен,15,0,0.0
+09-stress-cascade-rollback,D (stress),FLAKY,[FLAKY] два rollback подряд — stale closure в useTasks,15,0,0.0
+09-stress-cascade-rollback,D (stress),STABLE,[STABLE] последовательные rollback — ждём каждый toast,15,0,0.0
+09-stress-cascade-rollback,D (stress),STRESS,[STRESS] 5 rollback'ов подряд — финальный state = original,15,0,0.0
+09-stress-cascade-rollback,D (stress),STRESS,[STRESS] rollback удаления 3 задач — DOM isolation,15,0,0.0
