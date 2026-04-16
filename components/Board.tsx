@@ -23,6 +23,34 @@ import { ToastContainer } from "./Toast";
 
 const COLUMN_ORDER: Status[] = ["BACKLOG", "IN_PROGRESS", "REVIEW", "DONE"];
 
+// ─── localStorage утилиты (добавлены для OD-экспериментов) ───────────────────
+//
+// KEY: 'taskboard:lastColumn'
+// Глобальная кнопка "New Task" читает это значение и pre-select'ит
+// соответствующую колонку в модале.
+//
+// ИСТОЧНИК OD-ФЛАКИНЕССА (spec 11):
+//   click event → openCreateModal() → saveLastColumn() → localStorage.setItem()
+//   → persisted state между тестами → VICTIM-тест читает загрязнённое значение
+
+const LS_LAST_COLUMN_KEY = "taskboard:lastColumn";
+
+function readLastColumn(): Status {
+	if (typeof window === "undefined") return "BACKLOG";
+	const stored = window.localStorage.getItem(LS_LAST_COLUMN_KEY);
+	if (stored && (COLUMN_ORDER as string[]).includes(stored)) {
+		return stored as Status;
+	}
+	return "BACKLOG";
+}
+
+function saveLastColumn(status: Status): void {
+	if (typeof window === "undefined") return;
+	window.localStorage.setItem(LS_LAST_COLUMN_KEY, status);
+}
+
+// ─── Board ────────────────────────────────────────────────────────────────────
+
 export function Board() {
 	const { toasts, addToast, removeToast } = useToast();
 	const { tasks, loading, createTask, updateTask, moveTask, deleteTask } =
@@ -32,7 +60,6 @@ export function Board() {
 		);
 
 	const [activeTask, setActiveTask] = useState<Task | null>(null);
-
 	const [modalTarget, setModalTarget] = useState<null | "new" | Task>(null);
 	const [modalDefaultStatus, setModalDefaultStatus] =
 		useState<Status>("BACKLOG");
@@ -64,12 +91,10 @@ export function Board() {
 	function handleDragEnd(event: DragEndEvent) {
 		const { active, over } = event;
 		setActiveTask(null);
-
 		if (!over) return;
 
 		const taskId = active.id as string;
 		const overId = over.id as string;
-
 		let targetStatus: Status | null = null;
 
 		if (COLUMN_ORDER.includes(overId as Status)) {
@@ -82,8 +107,17 @@ export function Board() {
 		if (targetStatus) moveTask(taskId, targetStatus);
 	}
 
+	// Открывает модал для конкретной колонки + СОХРАНЯЕТ выбор в localStorage
 	function openCreateModal(status: Status) {
+		saveLastColumn(status); // side-effect → persists → OD source
 		setModalDefaultStatus(status);
+		setModalTarget("new");
+	}
+
+	// Глобальная "New Task": ЧИТАЕТ последнюю колонку из localStorage
+	function openCreateModalWithMemory() {
+		const lastColumn = readLastColumn(); // может прочитать загрязнение от поллютера
+		setModalDefaultStatus(lastColumn);
 		setModalTarget("new");
 	}
 
@@ -109,7 +143,7 @@ export function Board() {
 
 				<button
 					data-testid="global-add-task-btn"
-					onClick={() => openCreateModal("BACKLOG")}
+					onClick={openCreateModalWithMemory}
 					className="
             flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold
             bg-[#4f7fff] hover:bg-[#6b93ff] text-white
@@ -117,7 +151,7 @@ export function Board() {
           "
 				>
 					<svg viewBox="0 0 16 16" fill="currentColor" className="w-3.5 h-3.5">
-						<path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
+						<path d="M7.75 2a.75.75 0 01.75.75V7h4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 110 1.5H8.5v4.25a.75.75 0 11-1.5 0V8.5H2.75a.75.75 0 010-1.5H7V2.75A.75.75 0 017.75 2z" />
 					</svg>
 					New Task
 				</button>

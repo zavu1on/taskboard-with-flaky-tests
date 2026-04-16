@@ -1,0 +1,46 @@
+==============================================================
+  ОТЧЁТ: Среда B — Order-Dependent (OD) тесты
+  Дата: 2026-04-16 11:06
+==============================================================
+
+Всего записей: 210
+Режимы запуска: ['isolated', 'polluted', 'stable']
+
+─── Failure Rate по OD-категориям ───
+  Категория      Runs  Fails    Rate  Описание
+  ────────────────────────────────────────────────────────────
+  ISOLATED         60      0    0.0%  Victim без поллютера (baseline)
+  POLLUTER         60      0    0.0%  Загрязняет среду для следующих тестов
+  VICTIM           60     30   50.0%  Падает из-за поллютера (OD-флакинесс)
+  STABLE           30      0    0.0%  Фикс применён (cleanup в beforeEach)
+
+─── OD-паттерн: VICTIM failure rate по режимам ───
+  isolated    — VICTIM-тестов нет
+  polluted    rate=100.0%  (n=30)  ← HALLMARK OD-ФЛАКИНЕССА
+  stable      rate=  0.0%  (n=30)  
+
+─── Подтверждение OD-гипотезы ───
+
+H_OD1: VICTIM падает чаще при наличии POLLUTER
+  isolated_rate=0.0% vs polluted_rate=100.0%
+  Результат: ПОДТВЕРЖДЕНА ✓
+
+H_OD2: Явная очистка состояния (beforeEach cleanup) устраняет OD-флакинесс
+  stable_rate=0.0% (порог: <5%)
+  Результат: ПОДТВЕРЖДЕНА ✓
+
+─── Детализация по спекам ───
+
+  Spec 10: DOM Event Listener Leak
+    Механизм: Zombie capture-phase keydown listener блокирует TaskModal Escape handler
+    POLLUTER   rate=  0.0%  n=30
+    VICTIM     rate= 50.0%  n=30
+    STABLE     rate=  0.0%  n=15
+
+  Spec 11: localStorage State Pollution
+    Механизм: click→saveLastColumn()→localStorage.setItem() VICTIM читает загрязнённый 'lastColumn'
+    POLLUTER   rate=  0.0%  n=30
+    VICTIM     rate= 50.0%  n=30
+    STABLE     rate=  0.0%  n=15
+
+==============================================================

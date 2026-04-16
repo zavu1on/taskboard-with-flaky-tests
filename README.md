@@ -1,25 +1,60 @@
-# TaskBoard - E2E Flaky Test Demo
+# TaskBoard — E2E Flaky Test Research Platform
 
-Kanban-доска на **Next.js 15 + Prisma + PostgreSQL + Tailwind CSS**.  
-Создана для демонстрации нестабильности E2E-тестов, связанной с DOM Event Interaction,  
-в рамках доклада по работе **Pei, Sohn & Papadakis - ICST 2025**.
+## Authors and Contributors
 
----
+The main contributor is **Mikhail M. Alekseev**, student of Peter the Great St. Petersburg Polytechnic University, Institute of Computer Science and Cybersecurity (SPbPU ICSC).
+The advisor and contributor Vladimir A. Parkhomenko, Senior Lecturer of SPbPU ICSC.
 
-## Быстрый старт
+## Introduction
 
-### 1. Зависимости
+TaskBoard is a Kanban-style task management application built on **Next.js 15 + Prisma + PostgreSQL + Tailwind CSS**. It serves as a controlled research platform for studying and reproducing instability in End-to-End (E2E) tests caused by DOM Event Interaction.
+
+The project was completed during the preparation of Mikhail A. Alekseev's coursework on *Software Testing Methods* at SPbPU Institute of Computer Science and Cybersecurity (SPbPU ICSC).
+
+The research is grounded in the empirical classification of DOM-related flaky tests proposed by Pei, Sohn & Papadakis (ICST 2025) and extended with Order-Dependent (OD) flakiness analysis following the methodology of Luo et al. (EMSE 2019).
+
+### Research Overview
+
+The project implements two experimental environments:
+
+**Environment A — Timing Flakiness (Specs 01–09)**
+Reproduces instability arising from DOM Event Interaction timing: race conditions between event dispatch and DOM updates, assertion timing on animated elements, optimistic UI rollbacks, and drag-and-drop pointer event chains. Tests are classified according to the ED / R / DE / D taxonomy from Pei et al.
+
+**Environment B — Order-Dependent Flakiness (Specs 10–11)**
+Reproduces instability arising from shared state that persists between tests within the same browser context. Two concrete OD mechanisms are studied:
+
+- **Spec 10**: Zombie DOM Event Listener Leak — a capture-phase `keydown` listener left on `document` by one test intercepts Escape events in subsequent tests via `stopImmediatePropagation()`, preventing `TaskModal` from closing.
+- **Spec 11**: localStorage State Pollution — a click event triggers `saveLastColumn()` which writes to `localStorage['taskboard:lastColumn']`; the next test reads the polluted value and creates a task in the wrong column.
+
+Experimental results from Environment B (15 repetitions per mode, Chromium):
+
+| OD Category | Runs | Failure Rate |
+|-------------|------|-------------|
+| ISOLATED (victim without polluter) | 30 | 0.0% |
+| POLLUTER | 60 | 0.0% |
+| VICTIM (with polluter) | 30 | 100.0% |
+| STABLE (with cleanup fix) | 30 | 0.0% |
+
+Both research hypotheses were confirmed: H_OD1 (victims fail significantly more often when preceded by a polluter) and H_OD2 (explicit state cleanup in `beforeEach` eliminates OD flakiness).
+
+## Instruction
+
+### Prerequisites
+
+- Node.js 18+
+- PostgreSQL 16 (local or Docker)
+- Python 3.9+ with `pandas` and `matplotlib` (for analysis scripts)
+
+### 1. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 2. База данных (PostgreSQL)
-
-Запустите PostgreSQL локально или через Docker:
+### 2. Database setup
 
 ```bash
-# Docker
+# Start PostgreSQL via Docker
 docker run -d \
   --name taskboard-pg \
   -e POSTGRES_DB=taskboard \
@@ -27,238 +62,134 @@ docker run -d \
   -e POSTGRES_PASSWORD=postgres \
   -p 5432:5432 \
   postgres:16-alpine
-```
 
-### 3. Переменные окружения
-
-```bash
+# Configure environment
 cp .env.example .env.local
-# Отредактируйте DATABASE_URL в .env.local
+# Edit DATABASE_URL in .env.local
+
+# Apply schema and seed data
+npm run db:push
+npm run db:seed
 ```
 
-Пример `.env.local`:
-```
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/taskboard"
-```
-
-### 4. Миграция и seed
-
-```bash
-npm run db:push   # применяет схему
-npm run db:seed   # заполняет тестовыми данными
-```
-
-### 5. Запуск приложения
+### 3. Run the application
 
 ```bash
 npm run dev
-# -> http://localhost:3000
+# http://localhost:3000
 ```
 
----
-
-## E2E тесты
-
-### Установка Playwright
+### 4. Install Playwright
 
 ```bash
 npx playwright install chromium
 ```
 
-### Базовый запуск
+### Environment A — Timing Flakiness (Specs 01–09)
 
 ```bash
-# Все тесты (headless)
-npx playwright test
-
-# Конкретный spec
-npx playwright test tests/e2e/01-async-race.spec.ts
-
-# С UI-режимом (наглядно)
-npx playwright test --ui
-
-# Обнаружение флаки в CI-режиме
-npx playwright test --retries 2 --fail-on-flaky-tests
-```
-
-### HTML-отчёт
-
-```bash
-npx playwright show-report
-```
-
----
-
-## Структура тестов
-
-### Основные спеки (01–06)
-
-| Spec | Категория (ICST 2025) | Описание |
-|------|----------------------|----------|
-| `01-async-race` | ED (Event-DOM) | Race condition после Submit |
-| `02-toast-timing` | R (Response) | Assertion timing для animated toast |
-| `03-modal-dom-context` | DE (DOM-Event) | Взаимодействие с portal-модалом |
-| `04-optimistic-rollback` | R + ED | Optimistic UI + server rollback |
-| `05-drag-and-drop` | ED + E | DnD через @dnd-kit, production case |
-| `06-delete-dom-consistency` | D (DOM) | Удаление + DOM consistency |
-
-### Стресс-спеки (07–09)
-
-| Spec | Категория (ICST 2025) | Описание |
-|------|----------------------|----------|
-| `07-stress-concurrent` | ED (stress) | 10 параллельных задач, batch DOM mutations |
-| `08-stress-rapid-events` | R + DE (stress) | Быстрые последовательные события, накопление listener'ов |
-| `09-stress-cascade-rollback` | D (stress) | Каскадные rollback'и, stale closure в useTasks |
-
-Каждый spec содержит:
-- `[FLAKY]` — намеренно нестабильный тест с объяснением причины
-- `[STABLE]` — правильное решение
-- `[STRESS]` — сценарий нагрузки для воспроизведения гонок
-
----
-
-## Архитектура приложения
-
-```
-taskboard/
-├── app/
-│   ├── api/tasks/          # GET all, POST create
-│   │   └── [id]/           # PATCH update, DELETE
-│   ├── layout.tsx
-│   ├── page.tsx
-│   └── globals.css
-├── components/
-│   ├── Board.tsx            # DnD context + state orchestration
-│   ├── Column.tsx           # Drop target
-│   ├── TaskCard.tsx         # Draggable card
-│   ├── TaskModal.tsx        # Create/Edit form
-│   └── Toast.tsx            # Notification system
-├── hooks/
-│   ├── useTasks.ts          # Optimistic CRUD + API calls
-│   └── useToast.ts          # Toast state management
-├── lib/
-│   ├── prisma.ts            # Singleton Prisma client
-│   └── types.ts             # Shared TypeScript types
-├── prisma/
-│   ├── schema.prisma
-│   └── seed.ts
-├── reporters/
-│   └── flaky-json-reporter.ts   # Кастомный репортер, пишет NDJSON
-├── scripts/
-│   ├── analyze-env-a.py         # Анализ результатов эксперимента
-│   └── fast-experiments.sh      # Быстрый запуск прогонов
-└── tests/e2e/
-    ├── helpers/board.ts          # Shared test utilities
-    ├── fixtures/
-    │   ├── cpu-throttle.ts       # CDP-фикстура для замедления CPU
-    │   └── network-delay.ts      # Route-фикстура для задержки сети
-    ├── 01-async-race.spec.ts
-    ├── 02-toast-timing.spec.ts
-    ├── 03-modal-dom-context.spec.ts
-    ├── 04-optimistic-rollback.spec.ts
-    ├── 05-drag-and-drop.spec.ts
-    ├── 06-delete-dom-consistency.spec.ts
-    ├── 07-stress-concurrent.spec.ts
-    ├── 08-stress-rapid-events.spec.ts
-    └── 09-stress-cascade-rollback.spec.ts
-```
-
----
-
-## Фикстуры
-
-### `fixtures/cpu-throttle.ts`
-
-Применяет замедление CPU через Chrome DevTools Protocol (CDP).  
-`Emulation.setCPUThrottlingRate({ rate: 4 })` замедляет JS execution в 4 раза,  
-имитируя слабый CI-агент. Работает только в Chromium.  
-При недоступности CDP (WSL, headless CI) автоматически переключается на  
-fallback: замедление `requestAnimationFrame` + задержка API через `page.route()`.
-
-```typescript
-// Управление через env-переменные:
-CPU_THROTTLE_RATE=4      // коэффициент замедления CDP
-CPU_FAKE_DELAY_MS=150    // задержка fallback-режима (мс)
-```
-
-### `fixtures/network-delay.ts`
-
-Добавляет случайную задержку на все запросы к `/api/*` через `page.route()`.  
-Работает в любом браузере без CDP.
-
-```typescript
-// Управление через env-переменные:
-API_DELAY_MS=300    // базовая задержка (мс)
-API_JITTER_MS=200   // случайная добавка ±jitter (мс)
-```
-
----
-
-## Эксперимент: воспроизведение флакинесса (Среда A — Baseline)
-
-Эксперимент запускает все тесты 15 раз подряд в штатных условиях  
-без искусственных ограничений. Результаты записываются в NDJSON-файл  
-кастомным репортером `flaky-json-reporter.ts`.
-
-### Предварительные условия
-
-Приложение должно быть запущено **до** старта тестов:
-
-```bash
-# Терминал 1 — держать открытым на всё время эксперимента
-npm run dev
-```
-
-### Запуск эксперимента
-
-```bash
-# Терминал 2
+# Full experiment — 15 repetitions, no retries
 TEST_ENV=A_baseline npx playwright test \
   --config playwright.env-a.config.ts \
   --repeat-each 15 --retries 0
-```
 
-Результаты сохраняются в `stress-results/A_baseline.ndjson`.
-
-### Анализ результатов
-
-```bash
-# Установить зависимости для анализа (один раз)
+# Analysis
 pip install pandas matplotlib
-
-# Запустить анализ
 python3 scripts/analyze-env-a.py
 ```
 
-Скрипт создаст папку `stress-results/analysis-a/` со следующими артефактами:
+Results are saved to `stress-results/analysis-a/`.
 
-| Файл | Описание |
-|------|----------|
-| `failure_rate_env_a.csv` | Таблица runs / fails / rate% по каждому тесту |
-| `figure_1_spec_bars.png` | Failure rate FLAKY vs STABLE по спекам |
-| `figure_2_pei_bars.png` | Failure rate по категориям Pei et al. |
-| `report_env_a.txt` | Текстовая проверка гипотез H1 и H3 |
+### Environment B — Order-Dependent Flakiness (Specs 10–11)
 
----
+The experiment runs in three modes to isolate the OD effect:
 
-## Ключевые паттерны нестабильности (по Pei et al., ICST 2025)
+```bash
+# Step 1: Isolated — victims without polluter (expected: 0% failure)
+TEST_ENV=B_od_isolated npx playwright test \
+  tests/e2e/10-od-listener-leak.spec.ts \
+  tests/e2e/11-od-localstorage.spec.ts \
+  --config playwright.env-b.config.ts \
+  --grep "ISOLATED" --repeat-each 15 --retries 0
 
-### ED (Event-DOM) — 32.5% случаев
-Событие модифицирует DOM. Нестабильно когда DOM не успел обновиться к моменту assertion.  
-**Фикс:** web-first assertions + `waitForResponse()`  
-**Спеки:** `01-async-race`, `07-stress-concurrent`
+# Step 2: Polluted — polluter precedes victim (expected: ~100% victim failure)
+TEST_ENV=B_od_polluted npx playwright test \
+  tests/e2e/10-od-listener-leak.spec.ts \
+  tests/e2e/11-od-localstorage.spec.ts \
+  --config playwright.env-b.config.ts \
+  --grep "POLLUTER.VICTIM" --repeat-each 15 --retries 0
 
-### R (Response) — 16.3% случаев
-Assertion срабатывает до стабилизации DOM после предыдущих событий.  
-**Фикс:** `await expect(locator).toBeVisible()` вместо `isVisible()`  
-**Спеки:** `02-toast-timing`, `08-stress-rapid-events`
+# Step 3: Stable — cleanup fix applied (expected: 0% failure)
+TEST_ENV=B_od_stable npx playwright test \
+  tests/e2e/10-od-listener-leak.spec.ts \
+  tests/e2e/11-od-localstorage.spec.ts \
+  --config playwright.env-b.config.ts \
+  --grep "STABLE" --repeat-each 15 --retries 0
 
-### DE (DOM-Event) — взаимодействие с немонтированным элементом
-DOM изменяется, событие не достигает цели (элемент не focusable, listener не добавлен).  
-**Фикс:** явное ожидание `toBeVisible()` перед любым взаимодействием с элементом  
-**Спеки:** `03-modal-dom-context`, `08-stress-rapid-events`
+# Analysis
+python3 scripts/analyze-env-b.py
+```
 
-### D (DOM) — самая долгая нестабильность (153.4 дня)
-Прямые DOM-манипуляции без учёта async-цепочек и stale closure в React hooks.  
-**Фикс:** `waitForResponse()` + `toHaveCount()` с polling + ожидание toast перед следующей операцией  
-**Спеки:** `06-delete-dom-consistency`, `09-stress-cascade-rollback`
+Results are saved to `stress-results/analysis-b/`.
+
+### Test Structure
+
+| Spec | Environment | OD Category | Mechanism |
+|------|-------------|-------------|-----------|
+| 01–async-race | A | ED | Race condition after Submit |
+| 02–toast-timing | A | R | Assertion timing on animated toast |
+| 03–modal-dom-context | A | DE | Interaction with portal modal |
+| 04–optimistic-rollback | A | R + ED | Optimistic UI + server rollback |
+| 05–drag-and-drop | A | ED + E | DnD via @dnd-kit |
+| 06–delete-dom-consistency | A | D | Delete + DOM consistency |
+| 07–stress-concurrent | A | ED (stress) | 10 parallel tasks, batch DOM mutations |
+| 08–stress-rapid-events | A | R + DE (stress) | Rapid sequential events |
+| 09–stress-cascade-rollback | A | D (stress) | Cascade rollbacks, stale closure |
+| 10–od-listener-leak | B | OD / VICTIM | Zombie capture-phase keydown listener |
+| 11–od-localstorage | B | OD / VICTIM | localStorage pollution via click event |
+
+### Viewing Reports
+
+```bash
+# Playwright HTML report
+npx playwright show-report
+
+# Environment A charts
+open stress-results/analysis-a/figure_1_spec_bars.png
+open stress-results/analysis-a/figure_2_pei_bars.png
+
+# Environment B charts
+open stress-results/analysis-b/figure_3_od_categories.png
+open stress-results/analysis-b/figure_4_order_comparison.png
+open stress-results/analysis-b/figure_5_spec_breakdown.png
+```
+
+## License
+
+MIT License
+
+Copyright (c) 2026 Mikhail Alekseev
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+## Warranty
+
+The developed software is a research prototype created for academic purposes. The authors give no warranty regarding fitness for production use.
+
+## References
+
+1. Pei, Z., Sohn, J., & Papadakis, M. (2025). *An Empirical Study of DOM-Related Flaky Tests*. IEEE International Conference on Software Testing, Verification and Validation (ICST 2025).
+
+2. Luo, Q., Hariri, F., Eloussi, L., & Marinov, D. (2014). *An Empirical Analysis of Flaky Tests*. Proceedings of the ACM SIGSOFT Symposium on the Foundations of Software Engineering (FSE 2014).
+
+3. Luo, Q., Zaidman, A., Penta, M. D., & Bavota, G. (2019). *Characterizing and Detecting Flaky Tests in Large Open-Source Systems*. Empirical Software Engineering (EMSE 2019).
+
+4. Playwright Documentation. Microsoft. https://playwright.dev/docs/intro
+
+5. Next.js Documentation. Vercel. https://nextjs.org/docs
+
+6. Prisma Documentation. Prisma Data. https://www.prisma.io/docs

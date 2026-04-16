@@ -1,0 +1,15 @@
+spec,od_category,title,run_mode,runs,fails,rate_%
+10-od-listener-leak,ISOLATED,[ISOLATED] Escape закрывает модал — чистая среда (PASS),isolated,15,0,0.0
+10-od-listener-leak,ISOLATED,[ISOLATED] многократный Escape не накапливает listeners,isolated,15,0,0.0
+10-od-listener-leak,POLLUTER,[POLLUTER] инжектирует zombie keydown listener — capture phase,polluted,15,0,0.0
+10-od-listener-leak,POLLUTER,[STABLE][POLLUTER] инжектирует zombie listener (тест сам по себе OK),stable,15,0,0.0
+10-od-listener-leak,STABLE,[STABLE] полный workflow после cleanup — создание задачи через форму,stable,15,0,0.0
+10-od-listener-leak,VICTIM,[VICTIM] Escape заблокирован zombie listener — модал не закрывается (EXPECTED FAIL),polluted,15,15,100.0
+10-od-listener-leak,VICTIM,[STABLE][VICTIM] Escape закрывает модал — zombie очищен beforeEach (PASS),stable,15,0,0.0
+11-od-localstorage,ISOLATED,[ISOLATED] localStorage персистирует между навигациями — механизм OD,isolated,15,0,0.0
+11-od-localstorage,ISOLATED,[ISOLATED] глобальная 'New Task' → дефолт BACKLOG (localStorage пуст),isolated,15,0,0.0
+11-od-localstorage,POLLUTER,[POLLUTER] создаёт задачу в DONE → загрязняет localStorage,polluted,15,0,0.0
+11-od-localstorage,POLLUTER,[STABLE][POLLUTER] создаёт задачу в DONE (localStorage будет очищен),stable,15,0,0.0
+11-od-localstorage,STABLE,[STABLE] явная установка localStorage — тест независим от порядка,stable,15,0,0.0
+11-od-localstorage,VICTIM,[VICTIM] OD подтверждён: задача создана в DONE вместо BACKLOG,polluted,15,15,100.0
+11-od-localstorage,VICTIM,[STABLE][VICTIM] задача создана в BACKLOG — OD устранён cleanup (PASS),stable,15,0,0.0
